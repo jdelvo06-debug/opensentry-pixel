@@ -16,33 +16,36 @@ export class WaveManager {
       wave: 2,
       bonus: 1000,
       spawns: [
-        { drone: 'quadcopter', count: 7, intervalMs: 780, delayMs: 300 },
-        { drone: 'micro', count: 5, intervalMs: 620, delayMs: 1900 },
+        { drone: 'quadcopter', count: 6, intervalMs: 900, delayMs: 900 },
+        { drone: 'micro', count: 4, intervalMs: 780, delayMs: 2600 },
       ],
     },
     {
       wave: 3,
       bonus: 1500,
-      spawns: [{ drone: 'fixedWing', count: 9, intervalMs: 700, delayMs: 350 }],
+      spawns: [
+        { drone: 'quadcopter', count: 3, intervalMs: 920, delayMs: 700 },
+        { drone: 'fixedWing', count: 5, intervalMs: 1050, delayMs: 1900 },
+      ],
     },
     {
       wave: 4,
       bonus: 2000,
       spawns: [
-        { drone: 'quadcopter', count: 5, intervalMs: 640, delayMs: 250 },
-        { drone: 'micro', count: 5, intervalMs: 520, delayMs: 1350 },
-        { drone: 'fixedWing', count: 4, intervalMs: 900, delayMs: 2400 },
-        { drone: 'loitering', count: 1, intervalMs: 1, delayMs: 4200 },
+        { drone: 'quadcopter', count: 5, intervalMs: 760, delayMs: 700 },
+        { drone: 'micro', count: 4, intervalMs: 660, delayMs: 2200 },
+        { drone: 'fixedWing', count: 3, intervalMs: 1050, delayMs: 3500 },
+        { drone: 'loitering', count: 1, intervalMs: 1, delayMs: 6500 },
       ],
     },
     {
       wave: 5,
       bonus: 2500,
       spawns: [
-        { drone: 'quadcopter', count: 6, intervalMs: 500, delayMs: 250 },
-        { drone: 'micro', count: 8, intervalMs: 390, delayMs: 900 },
-        { drone: 'fixedWing', count: 6, intervalMs: 660, delayMs: 2100 },
-        { drone: 'loitering', count: 3, intervalMs: 1250, delayMs: 3600 },
+        { drone: 'quadcopter', count: 5, intervalMs: 650, delayMs: 500 },
+        { drone: 'micro', count: 6, intervalMs: 520, delayMs: 1700 },
+        { drone: 'fixedWing', count: 5, intervalMs: 820, delayMs: 3400 },
+        { drone: 'loitering', count: 2, intervalMs: 1800, delayMs: 6200 },
       ],
     },
   ];
