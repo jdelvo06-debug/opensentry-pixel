@@ -12,8 +12,11 @@ This is **not** the full OpenSentry simulator and should not grow into one.
 
 Use Linear as the task board.
 
-- Team: `OpenSentry Pixel` (`PIXEL`)
-- Project: `OpenSentry Pixel MVP`
+- Linear team: `OpenSentry Pixel` (`PIXEL`)
+- Linear project: `OpenSentry Pixel MVP`
+- GitHub repo: `jdelvo06-debug/opensentry-pixel`
+- Local repo path: `/Users/jeremydelvaux/projects/opensentry-pixel`
+- Live GitHub Pages URL: `https://jdelvo06-debug.github.io/opensentry-pixel/`
 - Work one Linear issue at a time.
 - Before editing, read the active Linear issue and confirm its goal, constraints, acceptance criteria, and verification commands.
 - If the issue is ambiguous, ask for clarification before changing code.
