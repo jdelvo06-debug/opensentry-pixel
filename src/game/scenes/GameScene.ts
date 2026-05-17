@@ -7,6 +7,12 @@ import { WeaponSystem, type WeaponResult } from '../systems/WeaponSystem';
 import { GAME_HEIGHT, GAME_WIDTH, type DroneKey, type Point, type WeaponKey } from '../types';
 
 const WEAPON_ORDER: WeaponKey[] = ['laser', 'missile', 'jammer', 'hpm'];
+const WEAPON_COLORS: Record<WeaponKey, number> = {
+  laser: 0x86e9ff,
+  missile: 0xffd36b,
+  jammer: 0x49ffc4,
+  hpm: 0xffffff,
+};
 
 export class GameScene extends Phaser.Scene {
   private readonly base: Point = { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 48 };
@@ -185,12 +191,18 @@ export class GameScene extends Phaser.Scene {
     }
 
     for (const drone of result.destroyed) {
+      const point = { x: drone.x, y: drone.y };
       this.score += drone.type.score;
-      this.explosion({ x: drone.x, y: drone.y }, drone.type.color);
+      this.explosion(point, drone.type.color);
+      this.floatingText(point, `+${drone.type.score}`, '#ffd36b');
     }
 
     for (const drone of result.jammed) {
-      this.score += Math.round(drone.type.score * 0.75);
+      const point = { x: drone.x, y: drone.y };
+      const jamScore = Math.round(drone.type.score * 0.75);
+      this.score += jamScore;
+      this.rfDisruptEffect(point);
+      this.floatingText(point, `RF +${jamScore}`, '#49ffc4');
     }
 
     this.highScore = Math.max(this.highScore, this.score);
@@ -272,13 +284,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawCrosshair(): void {
+    const color = WEAPON_COLORS[this.weaponSystem.selected];
     this.crosshair.clear();
-    this.crosshair.lineStyle(1, 0xffffff, 0.72);
+    this.crosshair.lineStyle(2, color, 0.88);
     this.crosshair.strokeCircle(this.cursor.x, this.cursor.y, 12);
-    this.crosshair.lineBetween(this.cursor.x - 20, this.cursor.y, this.cursor.x - 8, this.cursor.y);
-    this.crosshair.lineBetween(this.cursor.x + 8, this.cursor.y, this.cursor.x + 20, this.cursor.y);
-    this.crosshair.lineBetween(this.cursor.x, this.cursor.y - 20, this.cursor.x, this.cursor.y - 8);
-    this.crosshair.lineBetween(this.cursor.x, this.cursor.y + 8, this.cursor.x, this.cursor.y + 20);
+    this.crosshair.lineStyle(1, 0xffffff, 0.72);
+    this.crosshair.strokeCircle(this.cursor.x, this.cursor.y, 4);
+    this.crosshair.lineStyle(2, color, 0.82);
+    this.crosshair.lineBetween(this.cursor.x - 22, this.cursor.y, this.cursor.x - 8, this.cursor.y);
+    this.crosshair.lineBetween(this.cursor.x + 8, this.cursor.y, this.cursor.x + 22, this.cursor.y);
+    this.crosshair.lineBetween(this.cursor.x, this.cursor.y - 22, this.cursor.x, this.cursor.y - 8);
+    this.crosshair.lineBetween(this.cursor.x, this.cursor.y + 8, this.cursor.x, this.cursor.y + 22);
   }
 
   private explosion(point: Point, color: number): void {
@@ -294,14 +310,51 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private baseImpactEffect(): void {
-    this.cameras.main.shake(120, 0.006);
-    const flash = this.add.rectangle(this.base.x, this.base.y, 150, 42, 0xff7070, 0.24);
+  private rfDisruptEffect(point: Point): void {
+    const ring = this.add.circle(point.x, point.y, 6);
+    ring.setStrokeStyle(2, 0x49ffc4, 0.95);
     this.tweens.add({
-      targets: flash,
+      targets: ring,
+      radius: 30,
       alpha: 0,
-      duration: 180,
-      onComplete: () => flash.destroy(),
+      duration: 360,
+      ease: 'Cubic.easeOut',
+      onComplete: () => ring.destroy(),
+    });
+  }
+
+  private floatingText(point: Point, label: string, color: string): void {
+    const text = this.add.text(point.x, point.y - 14, label, {
+      color,
+      fontFamily: 'Courier New, monospace',
+      fontSize: '14px',
+      fontStyle: 'bold',
+      stroke: '#020706',
+      strokeThickness: 3,
+    });
+    text.setOrigin(0.5, 0.5);
+    this.tweens.add({
+      targets: text,
+      y: text.y - 28,
+      alpha: 0,
+      duration: 620,
+      ease: 'Cubic.easeOut',
+      onComplete: () => text.destroy(),
+    });
+  }
+
+  private baseImpactEffect(): void {
+    this.cameras.main.shake(150, 0.008);
+    const screenFlash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xff3030, 0.12);
+    const flash = this.add.rectangle(this.base.x, this.base.y, 170, 48, 0xff7070, 0.32);
+    this.tweens.add({
+      targets: [screenFlash, flash],
+      alpha: 0,
+      duration: 210,
+      onComplete: () => {
+        screenFlash.destroy();
+        flash.destroy();
+      },
     });
   }
 }

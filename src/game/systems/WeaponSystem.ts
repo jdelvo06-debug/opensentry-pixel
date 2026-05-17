@@ -117,6 +117,9 @@ export class WeaponSystem {
     }
 
     const destroyed = target.takeDamage(36) ? [target] : [];
+    if (destroyed.length === 0) {
+      this.hitSpark(scene, endpoint, 0x86e9ff);
+    }
     return {
       message: destroyed.length > 0 ? 'TRACK DELETE' : 'LASER HIT',
       destroyed,
@@ -237,6 +240,19 @@ export class WeaponSystem {
       duration: 420,
       ease: 'Cubic.easeOut',
       onComplete: () => ring.destroy(),
+    });
+  }
+
+  private hitSpark(scene: Phaser.Scene, point: Point, color: number): void {
+    const spark = scene.add.circle(point.x, point.y, 4, color, 0.92);
+    spark.setStrokeStyle(1, 0xffffff, 0.9);
+    scene.tweens.add({
+      targets: spark,
+      radius: 18,
+      alpha: 0,
+      duration: 160,
+      ease: 'Cubic.easeOut',
+      onComplete: () => spark.destroy(),
     });
   }
 
