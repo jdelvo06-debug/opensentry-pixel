@@ -137,12 +137,12 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    if (event.code === 'KeyQ' || event.code === 'BracketLeft') {
+    if (event.code === 'KeyZ' || event.code === 'KeyQ' || event.code === 'BracketLeft') {
       this.cycleWeapon(-1);
       return;
     }
 
-    if (event.code === 'KeyE' || event.code === 'BracketRight') {
+    if (event.code === 'KeyX' || event.code === 'KeyE' || event.code === 'BracketRight') {
       this.cycleWeapon(1);
       return;
     }

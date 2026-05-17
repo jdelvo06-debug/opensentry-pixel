@@ -26,7 +26,7 @@ const STEPS: TutorialStep[] = [
   },
   {
     title: 'STEP 2 / SWITCH WEAPONS',
-    lines: ['Cycle weapons with mouse wheel or Q / E.', 'You can also click the weapon buttons in the HUD.', 'Select INTERCEPTOR to continue.'],
+    lines: ['Cycle weapons with mouse wheel or Z / X.', 'Q / E and HUD weapon buttons still work too.', 'Select INTERCEPTOR to continue.'],
     targetWeapon: 'missile',
     completeMessage: 'Interceptor selected. Big splash, limited ammo.',
   },
@@ -168,12 +168,12 @@ export class TutorialScene extends Phaser.Scene {
       return;
     }
 
-    if (event.code === 'KeyQ' || event.code === 'BracketLeft') {
+    if (event.code === 'KeyZ' || event.code === 'KeyQ' || event.code === 'BracketLeft') {
       this.cycleWeapon(-1);
       return;
     }
 
-    if (event.code === 'KeyE' || event.code === 'BracketRight') {
+    if (event.code === 'KeyX' || event.code === 'KeyE' || event.code === 'BracketRight') {
       this.cycleWeapon(1);
       return;
     }
