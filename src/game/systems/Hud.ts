@@ -29,8 +29,8 @@ export class Hud {
   update(state: HudState): void {
     this.score.textContent = `SCORE ${this.padScore(state.score)}`;
     this.highScore.textContent = `HIGH ${this.padScore(state.highScore)}`;
-    this.wave.textContent = `WAVE ${state.wave}`;
-    this.health.textContent = `BASE ${Math.max(0, Math.ceil(state.health))}%`;
+    this.wave.textContent = `${state.difficultyLabel} WAVE ${state.wave}`;
+    this.health.textContent = `BASE ${Math.max(0, Math.ceil(state.health))}/${state.maxHealth}`;
     this.weapon.textContent = `ACTIVE ${WEAPON_LABELS[state.weapons.selected]}`;
 
     const heat = Math.round(state.weapons.laserHeat);

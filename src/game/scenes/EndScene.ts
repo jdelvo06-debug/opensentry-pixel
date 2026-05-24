@@ -1,10 +1,12 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../types';
+import { DEFAULT_DIFFICULTY, DIFFICULTIES } from '../config';
+import { GAME_HEIGHT, GAME_WIDTH, type DifficultyKey } from '../types';
 
 interface EndSceneData {
   victory: boolean;
   score: number;
   highScore: number;
+  difficulty?: DifficultyKey;
 }
 
 export class EndScene extends Phaser.Scene {
@@ -13,6 +15,7 @@ export class EndScene extends Phaser.Scene {
   }
 
   create(data: EndSceneData): void {
+    const difficulty = DIFFICULTIES[data.difficulty ?? DEFAULT_DIFFICULTY];
     const title = data.victory ? 'SURVIVAL COMPLETE' : 'BASE OVERRUN';
     const titleColor = data.victory ? '#aaffc9' : '#ff7070';
 
@@ -36,6 +39,7 @@ export class EndScene extends Phaser.Scene {
         [
           `SCORE ${data.score.toString().padStart(6, '0')}`,
           `HIGH  ${data.highScore.toString().padStart(6, '0')}`,
+          `MODE  ${difficulty.label}`,
           '',
           data.victory ? 'AIRSPACE SECURED' : 'RADAR PICTURE LOST',
           '',
@@ -51,8 +55,8 @@ export class EndScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
-    this.input.once('pointerdown', () => this.scene.start('GameScene'));
-    this.input.keyboard?.once('keydown-R', () => this.scene.start('GameScene'));
+    this.input.once('pointerdown', () => this.scene.start('GameScene', { difficulty: difficulty.key }));
+    this.input.keyboard?.once('keydown-R', () => this.scene.start('GameScene', { difficulty: difficulty.key }));
   }
 
   private drawSignal(victory: boolean): void {

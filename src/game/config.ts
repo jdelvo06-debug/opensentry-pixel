@@ -1,5 +1,12 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, type DroneKey, type DroneTypeConfig } from './types';
+import {
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  type DifficultyConfig,
+  type DifficultyKey,
+  type DroneKey,
+  type DroneTypeConfig,
+} from './types';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -74,4 +81,44 @@ export const DRONE_TYPES: Record<DroneKey, DroneTypeConfig> = {
   },
 };
 
-export const HIGH_SCORE_KEY = 'opensentry-pixel-high-score';
+export const DIFFICULTIES: Record<DifficultyKey, DifficultyConfig> = {
+  cadet: {
+    key: 'cadet',
+    label: 'CADET',
+    description: 'Forgiving training tempo',
+    baseHealth: 125,
+    droneHealthMultiplier: 0.85,
+    droneSpeedMultiplier: 0.88,
+    droneDamageMultiplier: 0.75,
+    waveTimingMultiplier: 1.25,
+    scoreMultiplier: 0.9,
+  },
+  operator: {
+    key: 'operator',
+    label: 'OPERATOR',
+    description: 'Standard arcade pressure',
+    baseHealth: 100,
+    droneHealthMultiplier: 1,
+    droneSpeedMultiplier: 1,
+    droneDamageMultiplier: 1,
+    waveTimingMultiplier: 1,
+    scoreMultiplier: 1,
+  },
+  nightmare: {
+    key: 'nightmare',
+    label: 'NIGHTMARE',
+    description: 'Fast contacts, thin margin',
+    baseHealth: 85,
+    droneHealthMultiplier: 1.12,
+    droneSpeedMultiplier: 1.12,
+    droneDamageMultiplier: 1.18,
+    waveTimingMultiplier: 0.82,
+    scoreMultiplier: 1.25,
+  },
+};
+
+export const DEFAULT_DIFFICULTY: DifficultyKey = 'operator';
+
+export function getHighScoreKey(difficulty: DifficultyKey): string {
+  return `opensentry-pixel-high-score-${difficulty}`;
+}

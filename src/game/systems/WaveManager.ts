@@ -6,6 +6,8 @@ interface QueuedSpawn {
 }
 
 export class WaveManager {
+  private readonly timingMultiplier: number;
+
   private readonly waves: WaveDefinition[] = [
     {
       wave: 1,
@@ -54,6 +56,10 @@ export class WaveManager {
   private queue: QueuedSpawn[] = [];
   private active = false;
   private completed = false;
+
+  constructor(timingMultiplier = 1) {
+    this.timingMultiplier = timingMultiplier;
+  }
 
   get currentWave(): number {
     return this.waves[Math.min(this.waveIndex, this.waves.length - 1)].wave;
@@ -111,7 +117,7 @@ export class WaveManager {
     this.queue = wave.spawns.flatMap((spawn) =>
       Array.from({ length: spawn.count }, (_, index) => ({
         drone: spawn.drone,
-        remainingMs: spawn.delayMs + spawn.intervalMs * index,
+        remainingMs: (spawn.delayMs + spawn.intervalMs * index) * this.timingMultiplier,
       })),
     );
     this.active = true;

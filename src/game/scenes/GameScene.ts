@@ -1,10 +1,19 @@
 import Phaser from 'phaser';
-import { DRONE_TYPES, HIGH_SCORE_KEY } from '../config';
+import { DEFAULT_DIFFICULTY, DIFFICULTIES, DRONE_TYPES, getHighScoreKey } from '../config';
 import { Drone } from '../entities/Drone';
 import { Hud } from '../systems/Hud';
 import { WaveManager } from '../systems/WaveManager';
 import { WeaponSystem, type WeaponResult } from '../systems/WeaponSystem';
-import { GAME_HEIGHT, GAME_WIDTH, type DroneKey, type Point, type WeaponKey } from '../types';
+import {
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  type DifficultyConfig,
+  type DifficultyKey,
+  type DroneKey,
+  type DroneTypeConfig,
+  type Point,
+  type WeaponKey,
+} from '../types';
 
 const WEAPON_ORDER: WeaponKey[] = ['laser', 'missile', 'jammer', 'hpm'];
 const WEAPON_COLORS: Record<WeaponKey, number> = {
@@ -14,6 +23,10 @@ const WEAPON_COLORS: Record<WeaponKey, number> = {
   hpm: 0xffffff,
 };
 
+interface GameSceneData {
+  difficulty?: DifficultyKey;
+}
+
 export class GameScene extends Phaser.Scene {
   private readonly base: Point = { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 48 };
   private readonly cursor: Point = { x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 };
@@ -22,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   private waveManager!: WaveManager;
   private weaponSystem!: WeaponSystem;
   private crosshair!: Phaser.GameObjects.Graphics;
+  private difficulty: DifficultyConfig = DIFFICULTIES[DEFAULT_DIFFICULTY];
   private score = 0;
   private highScore = 0;
   private baseHealth = 100;
@@ -33,16 +47,17 @@ export class GameScene extends Phaser.Scene {
     super('GameScene');
   }
 
-  create(): void {
+  create(data: GameSceneData = {}): void {
+    this.difficulty = DIFFICULTIES[data.difficulty ?? DEFAULT_DIFFICULTY];
     this.drones = [];
     this.score = 0;
-    this.baseHealth = 100;
-    this.message = 'RADAR CONTACT';
+    this.baseHealth = this.difficulty.baseHealth;
+    this.message = `${this.difficulty.label} MODE`;
     this.paused = false;
     this.ended = false;
     this.highScore = this.readHighScore();
     this.hud = new Hud();
-    this.waveManager = new WaveManager();
+    this.waveManager = new WaveManager(this.difficulty.waveTimingMultiplier);
     this.weaponSystem = new WeaponSystem(this.base);
 
     this.cameras.main.setBackgroundColor('#020706');
@@ -114,8 +129,10 @@ export class GameScene extends Phaser.Scene {
 
     const waveResult = this.waveManager.tryAdvance(this.drones.length === 0);
     if (waveResult.advanced) {
-      this.score += waveResult.bonus;
-      this.message = waveResult.complete ? 'AIRSPACE SECURED' : `WAVE BONUS ${waveResult.bonus}`;
+      const bonus = this.applyScoreMultiplier(waveResult.bonus);
+      this.score += bonus;
+      this.highScore = Math.max(this.highScore, this.score);
+      this.message = waveResult.complete ? 'AIRSPACE SECURED' : `WAVE BONUS ${bonus}`;
     }
 
     if (waveResult.complete) {
@@ -210,7 +227,7 @@ export class GameScene extends Phaser.Scene {
 
   private spawnDrone(key: DroneKey): void {
     const spawn = this.pickSpawnPoint();
-    const drone = new Drone(this, DRONE_TYPES[key], spawn);
+    const drone = new Drone(this, this.tuneDrone(DRONE_TYPES[key]), spawn);
     this.drones.push(drone);
     this.message = `${DRONE_TYPES[key].label} CONTACT`;
   }
@@ -231,11 +248,12 @@ export class GameScene extends Phaser.Scene {
   private finish(victory: boolean): void {
     this.ended = true;
     this.highScore = Math.max(this.highScore, this.score);
-    localStorage.setItem(HIGH_SCORE_KEY, String(this.highScore));
+    localStorage.setItem(getHighScoreKey(this.difficulty.key), String(this.highScore));
     this.scene.start('EndScene', {
       victory,
       score: this.score,
       highScore: this.highScore,
+      difficulty: this.difficulty.key,
     });
   }
 
@@ -245,14 +263,39 @@ export class GameScene extends Phaser.Scene {
       highScore: this.highScore,
       wave: this.waveManager.currentWave,
       health: this.baseHealth,
+      maxHealth: this.difficulty.baseHealth,
+      difficultyLabel: this.difficulty.label,
       message: this.message,
       weapons: this.weaponSystem.getStatus(),
     });
   }
 
   private readHighScore(): number {
-    const stored = Number(localStorage.getItem(HIGH_SCORE_KEY));
+    const stored = Number(localStorage.getItem(getHighScoreKey(this.difficulty.key)));
+    if (Number.isFinite(stored) && stored > 0) {
+      return stored;
+    }
+
+    const legacyOperatorScore = Number(localStorage.getItem('opensentry-pixel-high-score'));
+    if (this.difficulty.key === 'operator' && Number.isFinite(legacyOperatorScore)) {
+      return legacyOperatorScore;
+    }
+
     return Number.isFinite(stored) ? stored : 0;
+  }
+
+  private tuneDrone(type: DroneTypeConfig): DroneTypeConfig {
+    return {
+      ...type,
+      maxHealth: Math.max(1, Math.round(type.maxHealth * this.difficulty.droneHealthMultiplier)),
+      speed: Math.max(1, Math.round(type.speed * this.difficulty.droneSpeedMultiplier)),
+      damage: Math.max(1, Math.round(type.damage * this.difficulty.droneDamageMultiplier)),
+      score: this.applyScoreMultiplier(type.score),
+    };
+  }
+
+  private applyScoreMultiplier(value: number): number {
+    return Math.max(1, Math.round(value * this.difficulty.scoreMultiplier));
   }
 
   private drawPlayfield(): void {

@@ -4,6 +4,7 @@ export const GAME_HEIGHT = 640;
 export type WeaponKey = 'laser' | 'missile' | 'jammer' | 'hpm';
 export type DroneKey = 'quadcopter' | 'micro' | 'fixedWing' | 'loitering';
 export type KillMethod = 'destroyed' | 'jammed';
+export type DifficultyKey = 'cadet' | 'operator' | 'nightmare';
 
 export interface Point {
   x: number;
@@ -38,6 +39,18 @@ export interface WaveDefinition {
   bonus: number;
 }
 
+export interface DifficultyConfig {
+  key: DifficultyKey;
+  label: string;
+  description: string;
+  baseHealth: number;
+  droneHealthMultiplier: number;
+  droneSpeedMultiplier: number;
+  droneDamageMultiplier: number;
+  waveTimingMultiplier: number;
+  scoreMultiplier: number;
+}
+
 export interface WeaponStatus {
   selected: WeaponKey;
   laserHeat: number;
@@ -54,6 +67,8 @@ export interface HudState {
   highScore: number;
   wave: number;
   health: number;
+  maxHealth: number;
+  difficultyLabel: string;
   message: string;
   weapons: WeaponStatus;
 }
