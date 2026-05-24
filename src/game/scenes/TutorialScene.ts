@@ -311,6 +311,7 @@ export class TutorialScene extends Phaser.Scene {
       health: this.baseHealth,
       maxHealth: 100,
       difficultyLabel: 'TRAINING',
+      streak: 0,
       message: this.message,
       weapons: this.weaponSystem.getStatus(),
     });

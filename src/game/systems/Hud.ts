@@ -50,7 +50,8 @@ export class Hud {
       state.weapons.hpmCooldownProgress >= 1
         ? 'HPM READY'
         : `HPM ${Math.round(state.weapons.hpmCooldownProgress * 100)}%`;
-    this.message.textContent = state.message;
+    const streakText = state.streak > 1 ? ` | CHAIN x${state.streak}` : '';
+    this.message.textContent = `${state.message}${streakText}`;
 
     for (const [weapon, id] of Object.entries(WEAPON_IDS) as [WeaponKey, string][]) {
       this.requireElement(id).classList.toggle('selected', state.weapons.selected === weapon);

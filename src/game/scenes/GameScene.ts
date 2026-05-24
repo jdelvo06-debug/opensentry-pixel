@@ -23,6 +23,7 @@ const WEAPON_COLORS: Record<WeaponKey, number> = {
   jammer: 0x49ffc4,
   hpm: 0xffffff,
 };
+const STREAK_WINDOW_MS = 2400;
 
 interface GameSceneData {
   difficulty?: DifficultyKey;
@@ -41,6 +42,9 @@ export class GameScene extends Phaser.Scene {
   private highScore = 0;
   private baseHealth = 100;
   private runStats!: RunStats;
+  private currentStreak = 0;
+  private streakTimerMs = 0;
+  private currentWaveImpacts = 0;
   private message = 'RADAR CONTACT';
   private paused = false;
   private ended = false;
@@ -55,6 +59,9 @@ export class GameScene extends Phaser.Scene {
     this.score = 0;
     this.baseHealth = this.difficulty.baseHealth;
     this.runStats = this.createRunStats();
+    this.currentStreak = 0;
+    this.streakTimerMs = 0;
+    this.currentWaveImpacts = 0;
     this.message = `${this.difficulty.label} MODE`;
     this.paused = false;
     this.ended = false;
@@ -109,8 +116,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     const delta = Math.min(deltaMs, 50);
+    this.updateStreakTimer(delta);
     this.waveManager.update(delta, (drone) => this.spawnDrone(drone));
-    this.applyWeaponResult(this.weaponSystem.update(this, delta, this.drones));
+    const weaponTick = this.weaponSystem.update(this, delta, this.drones);
+    this.applyWeaponResult(weaponTick);
+    if (this.shouldResetStreakForShot(weaponTick)) {
+      this.resetStreak();
+    }
 
     for (const drone of this.drones) {
       const result = drone.update(timeMs, delta, this.base);
@@ -118,6 +130,8 @@ export class GameScene extends Phaser.Scene {
         this.baseHealth = Math.max(0, this.baseHealth - result.impactDamage);
         this.runStats.baseImpacts += 1;
         this.runStats.finalBaseHealth = this.baseHealth;
+        this.currentWaveImpacts += 1;
+        this.resetStreak();
         this.message = 'BASE IMPACT';
         this.baseImpactEffect();
       } else if (result.crashed) {
@@ -132,13 +146,23 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    const clearedWave = this.waveManager.currentWave;
     const waveResult = this.waveManager.tryAdvance(this.drones.length === 0);
-    this.runStats.waveReached = Math.max(this.runStats.waveReached, this.waveManager.currentWave);
+    this.runStats.waveReached = Math.max(this.runStats.waveReached, clearedWave);
     if (waveResult.advanced) {
       const bonus = this.applyScoreMultiplier(waveResult.bonus);
       this.score += bonus;
+      if (this.currentWaveImpacts === 0) {
+        const cleanBonus = this.applyScoreMultiplier(clearedWave * 300);
+        this.score += cleanBonus;
+        this.runStats.cleanWaves += 1;
+        this.message = `NO-LEAK BONUS ${cleanBonus}`;
+      }
       this.highScore = Math.max(this.highScore, this.score);
-      this.message = waveResult.complete ? 'AIRSPACE SECURED' : `WAVE BONUS ${bonus}`;
+      if (this.currentWaveImpacts > 0) {
+        this.message = waveResult.complete ? 'AIRSPACE SECURED' : `WAVE BONUS ${bonus}`;
+      }
+      this.currentWaveImpacts = 0;
     }
 
     if (waveResult.complete) {
@@ -204,7 +228,11 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    this.applyWeaponResult(this.weaponSystem.fire(this, this.cursor, this.drones));
+    const result = this.weaponSystem.fire(this, this.cursor, this.drones);
+    this.applyWeaponResult(result);
+    if (this.shouldResetStreakForShot(result)) {
+      this.resetStreak();
+    }
     this.updateHud();
   }
 
@@ -217,6 +245,7 @@ export class GameScene extends Phaser.Scene {
       const point = { x: drone.x, y: drone.y };
       this.score += drone.type.score;
       this.runStats.dronesDestroyed += 1;
+      this.score += this.registerStreakHit(point);
       this.explosion(point, drone.type.color);
       this.floatingText(point, `+${drone.type.score}`, '#ffd36b');
     }
@@ -226,6 +255,7 @@ export class GameScene extends Phaser.Scene {
       const jamScore = Math.round(drone.type.score * 0.75);
       this.score += jamScore;
       this.runStats.dronesJammed += 1;
+      this.score += this.registerStreakHit(point);
       this.rfDisruptEffect(point);
       this.floatingText(point, `RF +${jamScore}`, '#49ffc4');
     }
@@ -276,9 +306,56 @@ export class GameScene extends Phaser.Scene {
       dronesDestroyed: 0,
       dronesJammed: 0,
       baseImpacts: 0,
+      bestStreak: 0,
+      cleanWaves: 0,
       finalBaseHealth: this.difficulty.baseHealth,
       maxBaseHealth: this.difficulty.baseHealth,
     };
+  }
+
+  private registerStreakHit(point: Point): number {
+    this.currentStreak += 1;
+    this.streakTimerMs = STREAK_WINDOW_MS;
+    this.runStats.bestStreak = Math.max(this.runStats.bestStreak, this.currentStreak);
+
+    if (this.currentStreak <= 1) {
+      return 0;
+    }
+
+    const bonus = this.applyScoreMultiplier((this.currentStreak - 1) * 25);
+    this.message = `TRACK CHAIN x${this.currentStreak}`;
+    this.floatingText({ x: point.x, y: point.y + 18 }, `CHAIN x${this.currentStreak} +${bonus}`, '#ffffff');
+    return bonus;
+  }
+
+  private updateStreakTimer(deltaMs: number): void {
+    if (this.currentStreak <= 0) {
+      return;
+    }
+
+    this.streakTimerMs -= deltaMs;
+    if (this.streakTimerMs <= 0) {
+      this.resetStreak();
+      this.message = 'CHAIN EXPIRED';
+    }
+  }
+
+  private resetStreak(): void {
+    this.currentStreak = 0;
+    this.streakTimerMs = 0;
+  }
+
+  private shouldResetStreakForShot(result: WeaponResult): boolean {
+    if (result.destroyed.length > 0 || result.jammed.length > 0) {
+      return false;
+    }
+
+    return (
+      result.message === 'LASER MISS'
+      || result.message === 'INTERCEPT MISS'
+      || result.message === 'NO RF EFFECT'
+      || result.message === 'HPM BURST CLEAR'
+    );
   }
 
   private updateHud(): void {
@@ -289,6 +366,7 @@ export class GameScene extends Phaser.Scene {
       health: this.baseHealth,
       maxHealth: this.difficulty.baseHealth,
       difficultyLabel: this.difficulty.label,
+      streak: this.currentStreak,
       message: this.message,
       weapons: this.weaponSystem.getStatus(),
     });

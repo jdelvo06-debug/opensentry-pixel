@@ -49,6 +49,8 @@ export class EndScene extends Phaser.Scene {
           `DRONES DELETED ${stats.dronesDestroyed}`,
           `RF DISRUPTS    ${stats.dronesJammed}`,
           `BASE IMPACTS   ${stats.baseImpacts}`,
+          `BEST CHAIN     ${stats.bestStreak}`,
+          `CLEAN WAVES    ${stats.cleanWaves}`,
           `FINAL BASE     ${stats.finalBaseHealth}/${stats.maxBaseHealth}`,
           '',
           'PRESS R OR CLICK TO RESTART',
@@ -73,6 +75,8 @@ export class EndScene extends Phaser.Scene {
       dronesDestroyed: 0,
       dronesJammed: 0,
       baseImpacts: 0,
+      bestStreak: 0,
+      cleanWaves: 0,
       finalBaseHealth: maxBaseHealth,
       maxBaseHealth,
     };

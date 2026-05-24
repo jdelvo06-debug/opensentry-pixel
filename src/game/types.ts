@@ -69,6 +69,7 @@ export interface HudState {
   health: number;
   maxHealth: number;
   difficultyLabel: string;
+  streak: number;
   message: string;
   weapons: WeaponStatus;
 }
@@ -78,6 +79,8 @@ export interface RunStats {
   dronesDestroyed: number;
   dronesJammed: number;
   baseImpacts: number;
+  bestStreak: number;
+  cleanWaves: number;
   finalBaseHealth: number;
   maxBaseHealth: number;
 }

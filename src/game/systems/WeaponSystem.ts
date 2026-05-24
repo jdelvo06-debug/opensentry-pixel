@@ -63,8 +63,10 @@ export class WeaponSystem {
     }
 
     const destroyed: Drone[] = [];
+    let missileResolved = false;
     for (const missile of this.missiles) {
       if (missile.update(deltaMs)) {
+        missileResolved = true;
         this.explosion(scene, { x: missile.x, y: missile.y }, missile.radius, 0xffd36b);
         for (const drone of drones) {
           if (drone.active && drone.distanceTo(missile) <= missile.radius && drone.takeDamage(missile.damage)) {
@@ -76,9 +78,11 @@ export class WeaponSystem {
 
     this.removeInactiveMissiles();
 
-    return destroyed.length > 0
-      ? { message: 'INTERCEPT CONFIRMED', destroyed, jammed: [] }
-      : EMPTY_RESULT;
+    if (destroyed.length > 0) {
+      return { message: 'INTERCEPT CONFIRMED', destroyed, jammed: [] };
+    }
+
+    return missileResolved ? { message: 'INTERCEPT MISS', destroyed: [], jammed: [] } : EMPTY_RESULT;
   }
 
   fire(scene: Phaser.Scene, cursor: Point, drones: Drone[]): WeaponResult {
