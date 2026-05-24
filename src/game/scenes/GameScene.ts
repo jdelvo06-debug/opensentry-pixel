@@ -12,6 +12,7 @@ import {
   type DroneKey,
   type DroneTypeConfig,
   type Point,
+  type RunStats,
   type WeaponKey,
 } from '../types';
 
@@ -39,6 +40,7 @@ export class GameScene extends Phaser.Scene {
   private score = 0;
   private highScore = 0;
   private baseHealth = 100;
+  private runStats!: RunStats;
   private message = 'RADAR CONTACT';
   private paused = false;
   private ended = false;
@@ -52,6 +54,7 @@ export class GameScene extends Phaser.Scene {
     this.drones = [];
     this.score = 0;
     this.baseHealth = this.difficulty.baseHealth;
+    this.runStats = this.createRunStats();
     this.message = `${this.difficulty.label} MODE`;
     this.paused = false;
     this.ended = false;
@@ -113,6 +116,8 @@ export class GameScene extends Phaser.Scene {
       const result = drone.update(timeMs, delta, this.base);
       if (result.impactDamage) {
         this.baseHealth = Math.max(0, this.baseHealth - result.impactDamage);
+        this.runStats.baseImpacts += 1;
+        this.runStats.finalBaseHealth = this.baseHealth;
         this.message = 'BASE IMPACT';
         this.baseImpactEffect();
       } else if (result.crashed) {
@@ -128,6 +133,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const waveResult = this.waveManager.tryAdvance(this.drones.length === 0);
+    this.runStats.waveReached = Math.max(this.runStats.waveReached, this.waveManager.currentWave);
     if (waveResult.advanced) {
       const bonus = this.applyScoreMultiplier(waveResult.bonus);
       this.score += bonus;
@@ -210,6 +216,7 @@ export class GameScene extends Phaser.Scene {
     for (const drone of result.destroyed) {
       const point = { x: drone.x, y: drone.y };
       this.score += drone.type.score;
+      this.runStats.dronesDestroyed += 1;
       this.explosion(point, drone.type.color);
       this.floatingText(point, `+${drone.type.score}`, '#ffd36b');
     }
@@ -218,6 +225,7 @@ export class GameScene extends Phaser.Scene {
       const point = { x: drone.x, y: drone.y };
       const jamScore = Math.round(drone.type.score * 0.75);
       this.score += jamScore;
+      this.runStats.dronesJammed += 1;
       this.rfDisruptEffect(point);
       this.floatingText(point, `RF +${jamScore}`, '#49ffc4');
     }
@@ -254,7 +262,23 @@ export class GameScene extends Phaser.Scene {
       score: this.score,
       highScore: this.highScore,
       difficulty: this.difficulty.key,
+      stats: {
+        ...this.runStats,
+        waveReached: Math.max(this.runStats.waveReached, this.waveManager.currentWave),
+        finalBaseHealth: Math.max(0, Math.ceil(this.baseHealth)),
+      },
     });
+  }
+
+  private createRunStats(): RunStats {
+    return {
+      waveReached: 1,
+      dronesDestroyed: 0,
+      dronesJammed: 0,
+      baseImpacts: 0,
+      finalBaseHealth: this.difficulty.baseHealth,
+      maxBaseHealth: this.difficulty.baseHealth,
+    };
   }
 
   private updateHud(): void {

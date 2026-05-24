@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import { DEFAULT_DIFFICULTY, DIFFICULTIES } from '../config';
-import { GAME_HEIGHT, GAME_WIDTH, type DifficultyKey } from '../types';
+import { GAME_HEIGHT, GAME_WIDTH, type DifficultyKey, type RunStats } from '../types';
 
 interface EndSceneData {
   victory: boolean;
   score: number;
   highScore: number;
   difficulty?: DifficultyKey;
+  stats?: RunStats;
 }
 
 export class EndScene extends Phaser.Scene {
@@ -16,6 +17,7 @@ export class EndScene extends Phaser.Scene {
 
   create(data: EndSceneData): void {
     const difficulty = DIFFICULTIES[data.difficulty ?? DEFAULT_DIFFICULTY];
+    const stats = data.stats ?? this.emptyStats(difficulty.baseHealth);
     const title = data.victory ? 'SURVIVAL COMPLETE' : 'BASE OVERRUN';
     const titleColor = data.victory ? '#aaffc9' : '#ff7070';
 
@@ -23,9 +25,9 @@ export class EndScene extends Phaser.Scene {
     this.drawSignal(data.victory);
 
     this.add
-      .text(GAME_WIDTH / 2, 170, title, {
+      .text(GAME_WIDTH / 2, 140, title, {
         fontFamily: '"Courier New", monospace',
-        fontSize: '40px',
+        fontSize: '38px',
         color: titleColor,
         align: 'center',
       })
@@ -35,7 +37,7 @@ export class EndScene extends Phaser.Scene {
     this.add
       .text(
         GAME_WIDTH / 2,
-        292,
+        356,
         [
           `SCORE ${data.score.toString().padStart(6, '0')}`,
           `HIGH  ${data.highScore.toString().padStart(6, '0')}`,
@@ -43,20 +45,37 @@ export class EndScene extends Phaser.Scene {
           '',
           data.victory ? 'AIRSPACE SECURED' : 'RADAR PICTURE LOST',
           '',
+          `WAVE REACHED   ${stats.waveReached}`,
+          `DRONES DELETED ${stats.dronesDestroyed}`,
+          `RF DISRUPTS    ${stats.dronesJammed}`,
+          `BASE IMPACTS   ${stats.baseImpacts}`,
+          `FINAL BASE     ${stats.finalBaseHealth}/${stats.maxBaseHealth}`,
+          '',
           'PRESS R OR CLICK TO RESTART',
         ],
         {
           fontFamily: '"Courier New", monospace',
-          fontSize: '22px',
+          fontSize: '18px',
           color: '#86e9ff',
           align: 'center',
-          lineSpacing: 8,
+          lineSpacing: 5,
         },
       )
       .setOrigin(0.5);
 
     this.input.once('pointerdown', () => this.scene.start('GameScene', { difficulty: difficulty.key }));
     this.input.keyboard?.once('keydown-R', () => this.scene.start('GameScene', { difficulty: difficulty.key }));
+  }
+
+  private emptyStats(maxBaseHealth: number): RunStats {
+    return {
+      waveReached: 1,
+      dronesDestroyed: 0,
+      dronesJammed: 0,
+      baseImpacts: 0,
+      finalBaseHealth: maxBaseHealth,
+      maxBaseHealth,
+    };
   }
 
   private drawSignal(victory: boolean): void {

@@ -72,3 +72,12 @@ export interface HudState {
   message: string;
   weapons: WeaponStatus;
 }
+
+export interface RunStats {
+  waveReached: number;
+  dronesDestroyed: number;
+  dronesJammed: number;
+  baseImpacts: number;
+  finalBaseHealth: number;
+  maxBaseHealth: number;
+}
