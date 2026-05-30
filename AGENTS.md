@@ -10,20 +10,18 @@ This is **not** the full OpenSentry simulator and should not grow into one.
 
 ## Source of Truth
 
-Use Linear as the task board.
+Use Cortana Command Center Kanban as the active task board for OpenSentry Pixel. GitHub remains the code workflow for branches, commits, PRs, CI, and releases. External task boards are opt-in only by explicit Jeremy direction.
 
-- Linear team: `OpenSentry Pixel` (`PIXEL`)
-- Linear project: `OpenSentry Pixel MVP`
 - GitHub repo: `jdelvo06-debug/opensentry-pixel`
 - Local repo path: `/Users/jeremydelvaux/projects/opensentry-pixel`
 - Live GitHub Pages URL: `https://jdelvo06-debug.github.io/opensentry-pixel/`
-- Work one Linear issue at a time.
-- Before editing, read the active Linear issue and confirm its goal, constraints, acceptance criteria, and verification commands.
-- If the issue is ambiguous, ask for clarification before changing code.
+- Work one Command Center Kanban card or Jeremy-directed task at a time.
+- Before editing, confirm the task goal, constraints, acceptance criteria, and verification commands.
+- If the task is ambiguous, ask for clarification before changing code.
 
 ## Branch Discipline
 
-Use one branch per issue.
+Use one branch per Command Center Kanban card or Jeremy-directed feature/fix.
 
 Branch naming examples:
 
@@ -106,18 +104,18 @@ If the issue changes deployment behavior, also run:
 GITHUB_PAGES=true npm run build
 ```
 
-When visual/gameplay behavior changes, include a short manual smoke-test note in the Linear comment. Screenshots are helpful when practical, but do not block small fixes on screenshots unless the issue asks for them.
+When visual/gameplay behavior changes, include a short manual smoke-test note in the final report or Command Center Kanban card. Screenshots are helpful when practical, but do not block small fixes on screenshots unless the task asks for them.
 
-## Linear Update Requirements
+## Command Center Update Requirements
 
-At the end of work, comment on the Linear issue with:
+At the end of work, report or update the Command Center Kanban card with:
 
 - What changed
 - Files touched
 - Verification commands run
 - Any caveats or follow-up recommendations
 
-Then move the issue to `In Review` if verification passes.
+For feature code, stop at PR/review unless Jeremy explicitly approves merge/deploy.
 
 ## Safety Rails
 
@@ -126,3 +124,12 @@ Then move the issue to `In Review` if verification passes.
 - Do not delete existing dogfood output unless the issue asks for cleanup.
 - Preserve `PROMPT.md` as the original MVP brief.
 - Keep `README.md` accurate when setup, build, or deploy behavior changes.
+
+## Agent OS Tasking Boundary
+
+- **Cortana Command Center Kanban is the source of truth for active Agent OS tasking.** Use it for priorities, card status, handoffs, and cross-agent coordination.
+- **Bypass Hermes Kanban by default.** Do not create, move, or depend on Hermes Kanban cards unless Jeremy explicitly asks for Hermes Kanban on that task.
+- **GitHub remains the source of truth for code workflow only.** Use GitHub for branches, commits, pull requests, CI, releases, and durable code review history. GitHub issues/PRs may reference Command Center Kanban cards, but they do not replace the Command Center board.
+- **External task boards are opt-in only.** Do not create, move, or treat external task-board items as source-of-truth tasking unless Jeremy explicitly asks for that tool on that project.
+- Before starting non-trivial work, identify the relevant Command Center Kanban card when one exists. If there is no card, proceed from Jeremy's direct instruction and avoid inventing task records unless asked.
+
